@@ -1,5 +1,6 @@
 from .nodoListaCircular import nodoListaCircular
 from src.classes.cliente import cliente
+from graphviz import Digraph
 import os
 
 class listaCircular:
@@ -74,14 +75,20 @@ class listaCircular:
         if self.inicio == None:
             print("Lista vacía.")
             return
-        if self.inicio.getDpi() == dpi:
+        if self.inicio == self.final and self.inicio.getCliente().getDpi() == str(dpi):
+            self.inicio = None
+            self.final = None
+            self.size = 0
+            print("Cliente eliminado exitosamente.")
+            return
+        if self.inicio.getCliente().getDpi() == str(dpi):
             self.inicio = self.inicio.getSiguiente()
             self.final.setSiguiente(self.inicio)
             self.inicio.setAnterior(self.final)
             self.size -= 1
             print("Cliente eliminado exitosamente.")
             return
-        elif self.final.getDpi() == dpi:
+        elif self.final.getCliente().getDpi() == str(dpi):
             self.final = self.final.getAnterior()
             self.final.setSiguiente(self.inicio)
             self.inicio.setAnterior(self.final)
@@ -109,13 +116,49 @@ class listaCircular:
         if aux is None:  # Si la lista está vacía
             return None
         while True:
-            if aux.getCliente().getDpi() == dpi:
+            if aux.getCliente().getDpi() == str(dpi):
                 return aux
             aux = aux.getSiguiente()
-            if aux == self.inicio:  # Regresaste al inicio
+            if aux == self.inicio:
                 break
         return None
 
     
-    def mostrarEstructura(self): #utilizar graphiz
-        pass
+    def mostrarEstructura(self):
+        if self.inicio is None:
+            print("Lista vacía.")
+            return
+        
+        texto = "digraph G {"
+        texto += "\n    node [shape=rect];"
+        texto += "\n    rankdir=TD;\n\n"
+        
+        aux = self.inicio
+        while True:
+            dpi = aux.getCliente().getDpi()
+            nombre = aux.getCliente().getNombres()
+            texto += f'    {dpi} [label="{dpi}\\n{nombre}"];\n'
+            
+            siguiente_dpi = aux.getSiguiente().getCliente().getDpi()
+            texto += f'    {dpi} -> {siguiente_dpi};\n'
+            texto += f'    {siguiente_dpi} -> {dpi};\n'
+            
+            aux = aux.getSiguiente()
+            if aux == self.inicio:
+                break
+            
+        texto += "    {\n        rank=same; "
+        aux = self.inicio
+        while True:
+            dpi = aux.getCliente().getDpi()
+            texto += f'{dpi}; '
+            aux = aux.getSiguiente()
+            if aux == self.inicio:
+                break
+            
+        texto += "\n    }\n}"
+        
+        with open("src/images/estructura.dot", "w") as archivo:
+            archivo.write(texto)
+            
+        os.system("dot -Tpng src/images/estructura.dot -o src/images/estructura.png")
