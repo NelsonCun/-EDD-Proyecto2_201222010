@@ -1,12 +1,15 @@
 from src.structs.listaCircular.listaCircular import listaCircular
 from src.classes.cliente import cliente
 from src.structs.listaCircular.nodoListaCircular import nodoListaCircular
+from src.structs.arbolB.arbolB import ArbolB
+from src.classes.vehiculo import vehiculo
 import tkinter as tk
 from tkinter import Menu, messagebox, Frame, Label, Button, ttk
 from PIL import Image, ImageTk
 from tkinter.filedialog import askopenfilename
 
 clientes = listaCircular()
+vehiculos = ArbolB(5)
 
 def reiniciar():
     info_label.place_forget()
@@ -58,6 +61,47 @@ def carga_masiva_clientes():
     if archivo:
         cargar_clientes_desde_texto(archivo)
     
+def cargar_vehiculos_desde_texto(ruta_archivo):
+    try:
+        with open(ruta_archivo, mode='r') as archivo:
+            lineas = archivo.readlines()
+            
+            for linea in lineas:
+                # Eliminar los saltos de línea y los espacios extras
+                linea = linea.strip().rstrip(';')
+                
+                if not linea:  # Si la línea está vacía, la ignoramos
+                    continue
+                
+                # Separar los campos por coma y espacio (formato: campo1, campo2, ...)
+                campos = [campo.strip() for campo in linea.split(':')]
+                
+                if len(campos) != 4:
+                    messagebox.showerror("Error", f"Formato incorrecto en la línea: {linea}")
+                    continue
+                
+                placa, marca, modelo, precio = campos
+                
+                # Validación de los datos
+                try:
+                    precio = float(precio)
+                except ValueError:
+                    messagebox.showerror("Error", "El precio debe ser un número decimal.")
+                    continue
+                
+                # Crear un nuevo vehiculo y agregarlo a la lista circular
+                nuevo_vehiculo = vehiculo(placa, marca, modelo, precio)
+                vehiculos.insertar_valor(nuevo_vehiculo)
+                
+            messagebox.showinfo("Carga Masiva", "Vehiculos cargados exitosamente.")
+    except Exception as e:
+        messagebox.showerror("Error", f"Hubo un error al cargar los vehiculos: {e}")
+
+def carga_masiva_vehiculos():
+    archivo = askopenfilename(title="Seleccionar archivo de texto", filetypes=[("Archivos de texto", "*.txt")])
+    if archivo:
+        cargar_vehiculos_desde_texto(archivo)
+
 def load_routes():
     messagebox.showinfo("Cargar Rutas", "Cargando archivo de rutas y generando el grafo...")
 
@@ -326,9 +370,163 @@ def ventana_mostrar_cliente():
     submit_button = tk.Button(ventana_cliente, text="Mostrar información", command=submit_data)
     submit_button.pack(pady=20)
     
+def ventana_crear_vehiculo():
+    ventana_vehiculo = tk.Toplevel()
+    ventana_vehiculo.title("Crear Vehiculo")
+    ventana_vehiculo.geometry("400x500")
+    
+    # Etiquetas y campos de entrada
+    tk.Label(ventana_vehiculo, text="Placa:").pack(pady=5)
+    placa_entry = tk.Entry(ventana_vehiculo)
+    placa_entry.pack(pady=5)
+    
+    tk.Label(ventana_vehiculo, text="Marca:").pack(pady=5)
+    marca_entry = tk.Entry(ventana_vehiculo)
+    marca_entry.pack(pady=5)
+    
+    tk.Label(ventana_vehiculo, text="Modelo:").pack(pady=5)
+    modelo_entry = tk.Entry(ventana_vehiculo)
+    modelo_entry.pack(pady=5)
+    
+    tk.Label(ventana_vehiculo, text="Precio por segundo (Q):").pack(pady=5)
+    precio_entry = tk.Entry(ventana_vehiculo)
+    precio_entry.pack(pady=5)
+    
+    def submit_data():
+        """Recoger datos y cerrar la ventana emergente."""
+        
+        placa = placa_entry.get()
+        marca = marca_entry.get()
+        modelo = modelo_entry.get()
+        precio = precio_entry.get()
+        
+        # Validación de precio (debe ser decimal)
+        try:
+            precio = float(precio)
+        except ValueError:
+            messagebox.showerror("Error", "El precio debe ser un número decimal.")
+            return
+        
+        # Crear vehículo
+        nuevo_vehiculo = vehiculo(placa, marca, modelo, precio)
+        vehiculos.insertar_valor(nuevo_vehiculo)
+        
+        messagebox.showinfo("Datos del Vehículo", f"Vehículo creado:\nPlaca: {placa}\nMarca: {marca}\nModelo: {modelo}\nPrecio por segundo: Q{precio}")
+        ventana_vehiculo.destroy()
+
+    submit_button = tk.Button(ventana_vehiculo, text="Crear Vehiculo", command=submit_data)
+    submit_button.pack(pady=20)
+    
+def ventana_modificar_vehiculo():
+    ventana_vehiculo = tk.Toplevel()
+    ventana_vehiculo.title("Modificar Vehículo")
+    ventana_vehiculo.geometry("400x300")
+    
+    # Etiquetas y campos de entrada
+    tk.Label(ventana_vehiculo, text="Placa:").pack(pady=5)
+    placa_entry = tk.Entry(ventana_vehiculo)
+    placa_entry.pack(pady=5)
+    
+    def submit_data():
+        """Verificar que exista el vehiculo a modificar"""
+        
+        placa = placa_entry.get()
+        
+        # Buscar vehiculo
+        vehiculo_a_modificar = vehiculos.buscar_vehiculo(placa)
+        
+        # Validar que exista el vehiculo a modificar
+        if vehiculo_a_modificar is None:
+            messagebox.showerror("Error", "El vehiculo no existe.")
+            return
+        
+        # Mostrar datos del vehículo encontrado (opcional)
+        messagebox.showinfo("Éxito", f"Vehículo encontrado {vehiculo_a_modificar.getPlaca()}")
+        
+        ventana_nuevos_datos_vehiculo(vehiculo_a_modificar)
+        
+        ventana_vehiculo.destroy()
+    
+    submit_button = tk.Button(ventana_vehiculo, text="Modificar Vehículo", command=submit_data)
+    submit_button.pack(pady=20)
+    
+def ventana_nuevos_datos_vehiculo(vehiculo: vehiculo):
+    ventana_vehiculo = tk.Toplevel()
+    ventana_vehiculo.title("Modificar Vehículo")
+    ventana_vehiculo.geometry("400x500")
+    
+    # Etiquetas y campos de entrada
+    
+    tk.Label(ventana_vehiculo, text="Precio por segundo (Q):").pack(pady=5)
+    precio_entry = tk.Entry(ventana_vehiculo)
+    precio_entry.pack(pady=5)
+    
+    precio_entry.insert(0, vehiculo.getPrecioSegundo())
+    
+    def submit_data():
+        """Recoger datos y cerrar la ventana emergente."""
+        precio = precio_entry.get()
+        
+        # Validación de precio (debe ser decimal)
+        try:
+            precio = float(precio)
+        except ValueError:
+            messagebox.showerror("Error", "El precio debe ser un número decimal.")
+            return
+        
+        # Modificar vehículo
+        vehiculo.setPrecioSegundo(precio)
+        
+        messagebox.showinfo("Datos del Vehículo", f"Vehículo modificado:\nPlaca: {vehiculo.getPlaca()}\nMarca: {vehiculo.getMarca()}\nModelo: {vehiculo.getModelo()}\nPrecio por segundo: Q{vehiculo.getPrecioSegundo()}")
+        
+        ventana_vehiculo.destroy()
+
+    submit_button = tk.Button(ventana_vehiculo, text="Modificar Vehiculo", command=submit_data)
+    submit_button.pack(pady=20)
+
+def ventana_eliminar_vehiculo():
+    messagebox.showinfo("Fracaso", "No se pudo eliminar el vehículo.")
+    
+def ventana_mostrar_vehiculo():
+    ventana_vehiculo = tk.Toplevel()
+    ventana_vehiculo.title("Mostrar datos de vehículo")
+    ventana_vehiculo.geometry("400x300")
+    
+    # Etiquetas y campos de entrada
+    tk.Label(ventana_vehiculo, text="Placa:").pack(pady=5)
+    placa_entry = tk.Entry(ventana_vehiculo)
+    placa_entry.pack(pady=5)
+    
+    def submit_data():
+        """Verificar que exista el vehiculo a mostrar"""
+        
+        placa = placa_entry.get()
+        
+        # Buscar vehiculo
+        vehiculo_a_mostrar:vehiculo = vehiculos.buscar_vehiculo(placa)
+        
+        # Validar que exista el vehiculo a modificar
+        if vehiculo_a_mostrar is None:
+            messagebox.showerror("Error", "El vehiculo no existe.")
+            return
+        
+        info_vehiculo = f"Placa: {vehiculo_a_mostrar.getPlaca()}\nMarca: {vehiculo_a_mostrar.getMarca()}\nModelo: {vehiculo_a_mostrar.getModelo()}\nPrecio por segundo: Q{vehiculo_a_mostrar.getPrecioSegundo()}"
+        
+        # Mostrar datos del cliente encontrados
+        info_label.config(text= f"INFORMACIÓN DEL VEHÍCULO\n\n{info_vehiculo}")
+        info_label.pack()
+        info_label.place(x=50, y=250, width=500, height=500)
+        
+        ventana_vehiculo.destroy()
+    
+    submit_button = tk.Button(ventana_vehiculo, text="Mostrar datos de Vehículo", command=submit_data)
+    submit_button.pack(pady=20)
+    
 def mostrar_estructura(entity):
     if entity == "clientes":
         clientes.mostrarEstructura()
+    elif entity == "vehiculos":
+        vehiculos.mostrar_estructura()
     
     #verificar si existe la imagen
     imagen_estructura_original = Image.open("src/images/estructura.png")
@@ -395,12 +593,12 @@ menu_bar.add_cascade(label="Clientes", menu=clients_menu)
 
 # Menú de Vehículos
 vehicles_menu = Menu(menu_bar, tearoff=0)
-vehicles_menu.add_command(label="Crear Vehículo", command=lambda: create_item("Vehículo"))
-vehicles_menu.add_command(label="Modificar Vehículo", command=lambda: modify_item("Vehículo"))
-vehicles_menu.add_command(label="Eliminar Vehículo", command=lambda: delete_item("Vehículo"))
-vehicles_menu.add_command(label="Mostrar Información de Vehículo", command=lambda: show_info("Vehículo"))
-vehicles_menu.add_command(label="Mostrar Estructura de Datos", command=lambda: show_data_structure("Vehículos"))
-vehicles_menu.add_command(label="Carga Masiva de Vehículos", command=mass_upload_vehicles)
+vehicles_menu.add_command(label="Crear Vehículo", command=lambda: ventana_crear_vehiculo())
+vehicles_menu.add_command(label="Modificar Vehículo", command=lambda: ventana_modificar_vehiculo())
+vehicles_menu.add_command(label="Eliminar Vehículo", command=lambda: ventana_eliminar_vehiculo())
+vehicles_menu.add_command(label="Mostrar Información de Vehículo", command=lambda: ventana_mostrar_vehiculo())
+vehicles_menu.add_command(label="Mostrar Estructura de Datos", command=lambda: mostrar_estructura("vehiculos"))
+vehicles_menu.add_command(label="Carga Masiva de Vehículos", command=lambda: carga_masiva_vehiculos())
 menu_bar.add_cascade(label="Vehículos", menu=vehicles_menu)
 
 # Menú de Viajes

@@ -1,10 +1,10 @@
 class vehiculo:
     
-    def __init__(self):
-        self.__placa = None
-        self.__marca = None
-        self.__modelo = None
-        self.__precioSegundo = None
+    def __init__(self, placa, marca, modelo, precioSegundo):
+        self.__placa = placa
+        self.__marca = marca
+        self.__modelo = modelo
+        self.__precioSegundo = precioSegundo
         
     def getPlaca(self) -> str:
         return self.__placa
