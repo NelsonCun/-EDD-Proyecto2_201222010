@@ -3,6 +3,8 @@ from src.classes.cliente import cliente
 from src.structs.listaCircular.nodoListaCircular import nodoListaCircular
 from src.structs.arbolB.arbolB import ArbolB
 from src.classes.vehiculo import vehiculo
+from src.structs.listaAdyacencia.listaAdyacencia import listaAdyacencia
+from src.classes.ruta import ruta
 import tkinter as tk
 from tkinter import Menu, messagebox, Frame, Label, Button, ttk
 from PIL import Image, ImageTk
@@ -10,6 +12,7 @@ from tkinter.filedialog import askopenfilename
 
 clientes = listaCircular()
 vehiculos = ArbolB(5)
+destinos = listaAdyacencia()
 
 def reiniciar():
     info_label.place_forget()
@@ -101,6 +104,40 @@ def carga_masiva_vehiculos():
     archivo = askopenfilename(title="Seleccionar archivo de texto", filetypes=[("Archivos de texto", "*.txt")])
     if archivo:
         cargar_vehiculos_desde_texto(archivo)
+
+def cargar_rutas_desde_texto(ruta_archivo):
+    try:
+        with open(ruta_archivo, mode='r') as archivo:
+            lineas = archivo.readlines()
+            
+            for linea in lineas:
+                # Eliminar los saltos de línea y los espacios extras
+                linea = linea.strip().rstrip('%')
+                
+                if not linea:  # Si la línea está vacía, la ignoramos
+                    continue
+                
+                # Separar los campos por coma y espacio (formato: campo1, campo2, ...)
+                campos = [campo.strip() for campo in linea.split('/')]
+                
+                if len(campos) != 3:
+                    messagebox.showerror("Error", f"Formato incorrecto en la línea: {linea}")
+                    continue
+                
+                origen, destino, tiempo_ruta = campos
+                
+                # Crear un nuevo vehiculo y agregarlo a la lista circular
+                nueva_ruta = ruta(origen, destino, tiempo_ruta)
+                destinos.insertar(nueva_ruta)
+                
+            messagebox.showinfo("Carga Masiva", "Vehiculos cargados exitosamente.")
+    except Exception as e:
+        messagebox.showerror("Error", f"Hubo un error al cargar los vehiculos: {e}")
+    
+def carga_masiva_rutas():
+    archivo = askopenfilename(title="Seleccionar archivo de texto", filetypes=[("Archivos de texto", "*.txt")])
+    if archivo:
+        cargar_rutas_desde_texto(archivo)
 
 def load_routes():
     messagebox.showinfo("Cargar Rutas", "Cargando archivo de rutas y generando el grafo...")
