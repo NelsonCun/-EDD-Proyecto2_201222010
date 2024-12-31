@@ -4,15 +4,19 @@ from src.structs.listaCircular.nodoListaCircular import nodoListaCircular
 from src.structs.arbolB.arbolB import ArbolB
 from src.classes.vehiculo import vehiculo
 from src.structs.listaAdyacencia.listaAdyacencia import listaAdyacencia
+from src.structs.listaSimple.listaSimple import ListaSimple
 from src.classes.ruta import ruta
+from src.classes.viaje import viaje
 import tkinter as tk
 from tkinter import Menu, messagebox, Frame, Label, Button, ttk
+from datetime import datetime
 from PIL import Image, ImageTk
 from tkinter.filedialog import askopenfilename
 
 clientes = listaCircular()
 vehiculos = ArbolB(5)
-destinos = listaAdyacencia()
+lugares = listaAdyacencia()
+viajes = ListaSimple()
 
 def reiniciar():
     info_label.place_forget()
@@ -128,11 +132,17 @@ def cargar_rutas_desde_texto(ruta_archivo):
                 
                 # Crear un nuevo vehiculo y agregarlo a la lista circular
                 nueva_ruta = ruta(origen, destino, tiempo_ruta)
-                destinos.insertar(nueva_ruta)
+                lugares.insertar(nueva_ruta)
                 
-            messagebox.showinfo("Carga Masiva", "Vehiculos cargados exitosamente.")
+            messagebox.showinfo("Carga Masiva", "Rutas cargadas exitosamente.")
+            
+            lugares.generar_reporte()
+            
+            mapa_label.place(x=155, y=310)
+            imagen_mapa_label.place(x=50, y=350, width=450, height=450)
+            
     except Exception as e:
-        messagebox.showerror("Error", f"Hubo un error al cargar los vehiculos: {e}")
+        messagebox.showerror("Error", f"Hubo un error al cargar las rutas: {e}")
     
 def carga_masiva_rutas():
     archivo = askopenfilename(title="Seleccionar archivo de texto", filetypes=[("Archivos de texto", "*.txt")])
@@ -399,8 +409,7 @@ def ventana_mostrar_cliente():
         
         # Mostrar datos del cliente encontrados
         info_label.config(text= f"INFORMACIÓN DEL CLIENTE\n\n{info_cliente}")
-        info_label.pack()
-        info_label.place(x=50, y=250, width=500, height=500)
+        info_label.place(x=600, y=500, width=400, height=250)
         
         ventana_cliente.destroy()
     
@@ -551,14 +560,122 @@ def ventana_mostrar_vehiculo():
         
         # Mostrar datos del cliente encontrados
         info_label.config(text= f"INFORMACIÓN DEL VEHÍCULO\n\n{info_vehiculo}")
-        info_label.pack()
-        info_label.place(x=50, y=250, width=500, height=500)
+        info_label.place(x=600, y=500, width=400, height=250)
         
         ventana_vehiculo.destroy()
     
     submit_button = tk.Button(ventana_vehiculo, text="Mostrar datos de Vehículo", command=submit_data)
     submit_button.pack(pady=20)
     
+
+def ventana_crear_viaje():
+    ventana_viaje = tk.Toplevel()
+    ventana_viaje.title("Crear Viaje")
+    ventana_viaje.geometry("400x500")
+    
+    # Etiquetas y campos de entrada
+    tk.Label(ventana_viaje, text="Lugar de origen:").pack(pady=5)
+    origen_entry = tk.Entry(ventana_viaje)
+    origen_entry.pack(pady=5)
+    
+    tk.Label(ventana_viaje, text="Lugar de destino:").pack(pady=5)
+    destino_entry = tk.Entry(ventana_viaje)
+    destino_entry.pack(pady=5)
+    
+    tk.Label(ventana_viaje, text="Fecha de viaje (YYYY-MM-DD):").pack(pady=5)
+    fecha_entry = tk.Entry(ventana_viaje)
+    fecha_entry.pack(pady=5)
+    
+    tk.Label(ventana_viaje, text="Hora de inicio (HH:MM):").pack(pady=5)
+    hora_entry = tk.Entry(ventana_viaje)
+    hora_entry.pack(pady=5)
+    
+    tk.Label(ventana_viaje, text="Cliente:").pack(pady=5)
+    cliente_entry = tk.Entry(ventana_viaje)
+    cliente_entry.pack(pady=5)
+    
+    tk.Label(ventana_viaje, text="Vehículo:").pack(pady=5)
+    vehiculo_entry = tk.Entry(ventana_viaje)
+    vehiculo_entry.pack(pady=5)
+    
+    def validar_fecha(fecha):
+        try:
+            datetime.strptime(fecha, "%Y-%m-%d")
+            return True
+        except ValueError:
+            return False
+    
+    def validar_hora(hora):
+        try:
+            datetime.strptime(hora, "%H:%M")
+            return True
+        except ValueError:
+            return False
+
+    def submit_data():
+        """Recoger datos y cerrar la ventana emergente."""
+        
+        origen = origen_entry.get()
+        destino = destino_entry.get()
+        fecha = fecha_entry.get()
+        hora = hora_entry.get()
+        cliente = cliente_entry.get()
+        vehiculo = vehiculo_entry.get()
+        
+        # Validar fecha
+        if not validar_fecha(fecha):
+            messagebox.showerror("Error", "La fecha debe estar en formato YYYY-MM-DD.")
+            return
+        
+        # Validar hora
+        if not validar_hora(hora):
+            messagebox.showerror("Error", "La hora debe estar en formato HH:MM.")
+            return
+        
+        # Validar lugares de origen y destino
+        origen_encontrado = lugares.buscar_vertice(origen)
+        if origen_encontrado is None:
+            messagebox.showerror("Error", "El lugar de origen no existe.")
+            return
+        
+        destino_encontrado = lugares.buscar_vertice(destino)
+        if destino_encontrado is None:
+            messagebox.showerror("Error", "El lugar de destino no existe.")
+            return
+        
+        cliente_encontrado = clientes.buscar(cliente)
+        if cliente_encontrado is None:
+            messagebox.showerror("Error", "El cliente no existe.")
+            return
+        
+        vehiculo_encontrado = vehiculos.buscar_vehiculo(vehiculo)
+        if vehiculo_encontrado is None:
+            messagebox.showerror("Error", "El vehículo no existe.")
+            return
+        
+        viajeID = viajes.getSize() + 1
+        
+        # Crear cliente
+        nuevo_viaje = viaje(viajeID, origen, destino, fecha, hora, cliente_encontrado, vehiculo_encontrado)
+        nuevo_viaje.getRutaTomada(lugares)
+        viajes.agregar(nuevo_viaje)
+        
+        messagebox.showinfo("Datos del viaje", f"id: {nuevo_viaje.getIdViaje()}\n origen: {nuevo_viaje.getLugarOrigen()}\n destino: {nuevo_viaje.getLugarDestino()}\n fecha: {nuevo_viaje.getFechaInicio()}\n hora: {nuevo_viaje.getHoraInicio()}\n cliente: {nuevo_viaje.getCliente().getCliente().getNombres()}\n vehiculo: {nuevo_viaje.getVehiculo().getPlaca()}")
+        print(nuevo_viaje.mostrar_ruta())
+        nuevo_viaje.generar_reporte()
+        
+        imagen_estructura_original = Image.open("src/images/estructura.png")
+        imagen_estructura_ajustada = imagen_estructura_original.resize((800, 400), Image.Resampling.LANCZOS)
+        imagen_estructura = ImageTk.PhotoImage(imagen_estructura_ajustada)
+        imagen_estructura_label.config(image=imagen_estructura)
+        imagen_estructura_label.image = imagen_estructura
+        imagen_estructura_label.place(x=600, y=50, width=800, height=400)
+        
+        ventana_viaje.destroy()
+
+    submit_button = tk.Button(ventana_viaje, text="Crear Viaje", command=submit_data)
+    submit_button.pack(pady=20)
+
 def mostrar_estructura(entity):
     if entity == "clientes":
         clientes.mostrarEstructura()
@@ -592,6 +709,18 @@ imagen_estructura_label = tk.Label(root, image=imagen_estructura)
 imagen_estructura_label.image = imagen_estructura
 imagen_estructura_label.place_forget()
 
+# Mapa
+imagen_mapa = Image.open("src/images/mapa.png")
+imagen_mapa_ajustada = imagen_mapa.resize((450, 450), Image.Resampling.LANCZOS)
+imagen_mapa = ImageTk.PhotoImage(imagen_mapa_ajustada)
+imagen_mapa_label = tk.Label(root, image=imagen_mapa)
+imagen_mapa_label.image = imagen_mapa
+imagen_mapa_label.place_forget()
+
+# Rótulo mapa
+mapa_label = tk.Label(root, text="MAPA DE VIAJES:", font=("Arial", 25), bg="#013c6c", fg="white", anchor="w", justify="center")
+mapa_label.place_forget()
+
 #Ventana dinámica
 info_label = tk.Label(root, text="Hola", font=("Arial", 18), bg="#013c6c", fg="white", anchor="w", justify="left")
 info_label.place(x=50, y=250, width=500, height=500)
@@ -615,7 +744,7 @@ root.config(menu=menu_bar)
 
 # Menú de Rutas
 routes_menu = Menu(menu_bar, tearoff=0)
-routes_menu.add_command(label="Cargar Archivo de Rutas", command=load_routes)
+routes_menu.add_command(label="Carga Masiva de Rutas", command=lambda: carga_masiva_rutas())
 menu_bar.add_cascade(label="Rutas", menu=routes_menu)
 
 # Menú de Clientes
@@ -640,7 +769,7 @@ menu_bar.add_cascade(label="Vehículos", menu=vehicles_menu)
 
 # Menú de Viajes
 trips_menu = Menu(menu_bar, tearoff=0)
-trips_menu.add_command(label="Crear Viaje", command=lambda: create_item("Viaje"))
+trips_menu.add_command(label="Crear Viaje", command=lambda: ventana_crear_viaje())
 trips_menu.add_command(label="Mostrar Estructura de Datos", command=lambda: show_data_structure("Viajes"))
 menu_bar.add_cascade(label="Viajes", menu=trips_menu)
 

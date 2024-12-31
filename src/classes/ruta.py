@@ -1,9 +1,9 @@
 class ruta:
     
-    def __init__(self):
-        self.__origen = None
-        self.__destino = None
-        self.__tiempoRuta = None
+    def __init__(self, origen, destino, tiempoRuta):
+        self.__origen = origen
+        self.__destino = destino
+        self.__tiempoRuta = tiempoRuta
         
     def getOrigen(self) -> str:
         return self.__origen

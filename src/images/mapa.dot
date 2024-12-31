@@ -1,0 +1,28 @@
+digraph G {
+	bgcolor="#1a1a1a"
+	edge [arrowhead=none fontcolor=white color="#ff5400"];
+	node [shape=circle fixedsize=shape width=0.5 fontsize=7 style=filled fillcolor="#313638" fontcolor=white color=transparent];
+		"Oviedo" -> "Bilbao" [label="304", fontsize=8];
+	"Bilbao" -> "Zaragoza" [label="324", fontsize=8];
+	"Bilbao" -> "Madrid" [label="395", fontsize=8];
+	"Bilbao" -> "Valladolid" [label="280", fontsize=8];
+	"Coruna" -> "Vigo" [label="171", fontsize=8];
+	"Coruna" -> "Valladolid" [label="455", fontsize=8];
+	"Vigo" -> "Valladolid" [label="356", fontsize=8];
+	"Valladolid" -> "Madrid" [label="193", fontsize=8];
+	"Badajoz" -> "Madrid" [label="403", fontsize=8];
+	"Zaragoza" -> "Madrid" [label="325", fontsize=8];
+	"Zaragoza" -> "Barcelona" [label="296", fontsize=8];
+	"Gerona" -> "Barcelona" [label="100", fontsize=8];
+	"Barcelona" -> "Valencia" [label="349", fontsize=8];
+	"Albacete" -> "Madrid" [label="251", fontsize=8];
+	"Albacete" -> "Valencia" [label="191", fontsize=8];
+	"Albacete" -> "Murcia" [label="150", fontsize=8];
+	"Valencia" -> "Murcia" [label="241", fontsize=8];
+	"Madrid" -> "Jaen" [label="335", fontsize=8];
+	"Murcia" -> "Granada" [label="278", fontsize=8];
+	"Jaen" -> "Granada" [label="99", fontsize=8];
+	"Jaen" -> "Sevilla" [label="242", fontsize=8];
+	"Granada" -> "Sevilla" [label="256", fontsize=8];
+	"Sevilla" -> "Cadiz" [label="125", fontsize=8];
+}
